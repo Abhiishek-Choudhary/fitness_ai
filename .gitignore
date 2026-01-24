@@ -1,4 +1,5 @@
-fitness_ai/venv
-.venv/
-.env
+venv/
 __pycache__/
+*.pyc
+.env
+db.sqlite3
