@@ -1,0 +1,4 @@
+fitness_ai/venv
+.venv/
+.env
+__pycache__/
