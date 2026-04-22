@@ -68,9 +68,11 @@ class FitnessAIPlanView(APIView):
         # 2️⃣ Get fitness profile
         try:
             profile = user.fitness_profile
-        except:
+        except FitnessProfile.DoesNotExist:
             return Response(
-                {"error": "Fitness profile missing"},
+                {
+                    "error": "Fitness profile not found. Please create your profile first via POST /api/fitness/profile/"
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -232,9 +234,11 @@ class FitnessAIPlanRegenerateView(APIView):
         # 2️⃣ Get fitness profile
         try:
             profile = user.fitness_profile
-        except:
+        except FitnessProfile.DoesNotExist:
             return Response(
-                {"error": "Fitness profile missing"},
+                {
+                    "error": "Fitness profile not found. Please create your profile first via POST /api/fitness/profile/"
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -363,7 +367,7 @@ class NetCaloriesView(APIView):
     def get(self, request):
         try:
             profile = request.user.fitness_profile
-        except:
+        except FitnessProfile.DoesNotExist:
             return Response({"error": "Fitness profile not found"}, status=404)
 
         # Step 1: Calculate BMR, TDEE, and Calorie Target

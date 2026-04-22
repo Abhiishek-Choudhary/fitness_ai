@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    
+    'drf_spectacular',
+
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'dashboard',
@@ -56,6 +57,11 @@ INSTALLED_APPS = [
     'calorie_ai',
     'workout_agent',
     'posture_ai',
+    'gym_news',
+    'payments',
+    'reports',
+    'content_feed',
+    'community',
 ]
 
 MIDDLEWARE = [
@@ -158,10 +164,30 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Fitness AI API',
+    'DESCRIPTION': 'API for AI-powered fitness planning, calorie tracking, workout logging, and posture analysis.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+}
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',
+        'user': '1000/day',
+        'ai_endpoint': '30/hour',
+    },
 }
 
 SIMPLE_JWT = {
@@ -173,3 +199,32 @@ SIMPLE_JWT = {
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# News API
+NEWS_API_KEY = os.getenv('NEWS_API_KEY', '')
+
+# Email (SMTP)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', f'FitnessAI <{os.getenv("EMAIL_HOST_USER", "noreply@fitnessai.com")}>')
+
+# Razorpay
+RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID', '')
+RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET', '')
+RAZORPAY_WEBHOOK_SECRET = os.getenv('RAZORPAY_WEBHOOK_SECRET', '')
+
+# Cache — file-based so news results persist across restarts (no Redis needed)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': BASE_DIR / 'cache',
+        'TIMEOUT': 3600,  # 1 hour default
+        'OPTIONS': {
+            'MAX_ENTRIES': 500,
+        },
+    }
+}

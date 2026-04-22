@@ -2,10 +2,14 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
+from fitness_ai.throttles import AIEndpointUserThrottle, AIEndpointAnonThrottle
 from .models import PostureSession, PostureImage
 from .serializers import PostureSessionSerializer
 
+
 class PushUpImageUploadAPI(APIView):
+    throttle_classes = [AIEndpointUserThrottle, AIEndpointAnonThrottle]
+
     def post(self, request):
         images = request.FILES.getlist("images")
 
@@ -32,7 +36,10 @@ from .models import PostureSession
 from .services.posture_analyzer import analyze_pushup
 from .services.feedback_generator import generate_feedback
 
+
 class AnalyzePostureAPIView(APIView):
+    throttle_classes = [AIEndpointUserThrottle, AIEndpointAnonThrottle]
+
     def post(self, request, session_id):
         try:
             session = PostureSession.objects.get(id=session_id)

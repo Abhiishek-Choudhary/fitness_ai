@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import enriched_workout_api
+from .views import EnrichedWorkoutAPIView
 
 urlpatterns = [
-    path("api/enriched-workout/", enriched_workout_api, name="enriched-workout"),
+    path("api/enriched-workout/", EnrichedWorkoutAPIView.as_view(), name="enriched-workout"),
 ]

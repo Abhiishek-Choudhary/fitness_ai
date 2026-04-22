@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import User
-import json
 
 
 class FitnessProfile(models.Model):
@@ -86,11 +85,11 @@ class UserPrompt(models.Model):
 
 class FitnessAIPlan(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    plan_json = models.TextField()  # ← change here
+    plan_json = models.JSONField(default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def set_plan(self, data: dict):
-        self.plan_json = json.dumps(data)
+        self.plan_json = data
 
     def get_plan(self):
-        return json.loads(self.plan_json)
+        return self.plan_json

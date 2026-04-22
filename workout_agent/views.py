@@ -1,26 +1,21 @@
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 
+from fitness_ai.throttles import AIEndpointUserThrottle, AIEndpointAnonThrottle
 from workout_agent.agents.exercise_enricher import enrich_workout_plan
 
-@csrf_exempt
-def enriched_workout_api(request):
-    """
-    POST endpoint:
-    Input: JSON from Gemini AI (raw workout plan)
-    Output: JSON enriched with videos
-    """
-    if request.method != "POST":
-        return JsonResponse({"error": "Only POST method allowed"}, status=405)
 
-    try:
-        body = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid JSON"}, status=400)
+class EnrichedWorkoutAPIView(APIView):
+    throttle_classes = [AIEndpointUserThrottle, AIEndpointAnonThrottle]
 
-    try:
-        enriched_plan = enrich_workout_plan(body)
-        return JsonResponse(enriched_plan, safe=False, status=200)
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+    def post(self, request):
+        body = request.data
+        if not body:
+            return Response({"error": "Invalid or empty JSON body"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            enriched_plan = enrich_workout_plan(body)
+            return Response(enriched_plan, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
