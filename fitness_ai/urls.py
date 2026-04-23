@@ -40,6 +40,7 @@ urlpatterns = [
     path("api/reports/", include("reports.urls")),
     path("api/feed/",      include("content_feed.urls")),
     path("api/community/", include("community.urls")),
+    path("api/gyms/",      include("gyms.urls")),
 ]
 
 if settings.DEBUG:

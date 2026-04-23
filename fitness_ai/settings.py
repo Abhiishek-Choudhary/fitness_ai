@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'reports',
     'content_feed',
     'community',
+    'gyms',
 ]
 
 MIDDLEWARE = [
