@@ -1,5 +1,5 @@
-# setuptools provides pkg_resources (removed from Python 3.12+ stdlib)
-setuptools>=70.0.0
+# setuptools provides pkg_resources — pin below 71 where it was still bundled
+setuptools==69.5.1
 
 # Core Django
 Django==4.2.27
