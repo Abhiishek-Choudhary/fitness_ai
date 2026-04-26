@@ -86,9 +86,13 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://127.0.0.1:3000",
     "https://fitness-ai-qa9m.onrender.com",
-    "https://fitness-frontend-p2bceip02.vercel.app",
-    "https://fitness-frontend-c2oug7lbb.vercel.app",
 ]
+
+# Covers all Vercel preview & production deployments without manual updates
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://fitness-frontend-.*\.vercel\.app$",
+]
+
 CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'fitness_ai.urls'
