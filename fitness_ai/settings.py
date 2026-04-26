@@ -31,7 +31,10 @@ SECRET_KEY = 'django-insecure-q4(xm9rl@=_#^epswx%$6u4x9jw8^5^=f4@lsx+3p$s7-_iu98
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = os.getenv(
+    "ALLOWED_HOSTS",
+    "localhost,127.0.0.1,fitness-ai-qa9m.onrender.com"
+).split(",")
 
 
 # Application definition
@@ -78,10 +81,11 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Vite default
-    "http://localhost:3000",  # React default
+    "http://localhost:5173",
+    "http://localhost:3000",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:3000",
+    "https://fitness-ai-qa9m.onrender.com",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
