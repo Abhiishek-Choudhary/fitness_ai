@@ -43,15 +43,20 @@ def toggle_follow(user, gym) -> tuple:
     Returns (membership_or_None, created: bool).
     membership=None means the user unfollowed.
     """
-    try:
-        membership = GymMembership.objects.get(user=user, gym=gym)
-        # Already following — unfollow
+    # select_for_update prevents race condition when two requests arrive simultaneously
+    membership = (
+        GymMembership.objects
+        .select_for_update()
+        .filter(user=user, gym=gym)
+        .first()
+    )
+    if membership is not None:
         membership.delete()
-        Gym.objects.filter(pk=gym.pk).update(
+        Gym.objects.filter(pk=gym.pk, followers_count__gt=0).update(
             followers_count=db_models.F('followers_count') - 1
         )
         return None, False
-    except GymMembership.DoesNotExist:
+    else:
         membership = GymMembership.objects.create(user=user, gym=gym, status='following')
         Gym.objects.filter(pk=gym.pk).update(
             followers_count=db_models.F('followers_count') + 1
