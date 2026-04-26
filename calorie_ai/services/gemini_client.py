@@ -1,15 +1,13 @@
 import os
 import json
-import google.generativeai as genai
+from google import genai
 from PIL import Image
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-MODEL_NAME = "models/gemini-flash-latest"
+MODEL_NAME = "gemini-2.0-flash"
 
 def analyze_food_image(image_path: str):
-    model = genai.GenerativeModel(MODEL_NAME)
-
     image = Image.open(image_path)
 
     prompt = """
@@ -33,6 +31,9 @@ def analyze_food_image(image_path: str):
     - Do not add markdown
     """
 
-    response = model.generate_content([prompt, image])
+    response = _client.models.generate_content(
+        model=MODEL_NAME,
+        contents=[prompt, image],
+    )
 
     return json.loads(response.text)

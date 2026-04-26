@@ -1,14 +1,12 @@
 """Generate AI-powered improvement suggestions using Gemini."""
 import os
 import json
-import google.generativeai as genai
-from django.conf import settings
+from google import genai
+
+_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY", ""))
 
 
 def generate_ai_analysis(report_data: dict, period: str, period_start: str, period_end: str) -> str:
-    genai.configure(api_key=os.getenv('GEMINI_API_KEY', ''))
-    model = genai.GenerativeModel('gemini-1.5-flash')
-
     profile = report_data['profile']
     workouts = report_data['workouts']['stats']
     nutrition = report_data['nutrition']['stats']
@@ -73,7 +71,10 @@ Keep language motivating, specific, and based only on the data provided.
 """.strip()
 
     try:
-        response = model.generate_content(prompt)
+        response = _client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=prompt,
+        )
         return response.text.strip()
     except Exception as e:
         return (
