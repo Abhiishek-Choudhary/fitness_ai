@@ -1,3 +1,25 @@
+import sys
+import types
+import importlib.metadata
+
+# razorpay uses pkg_resources (from setuptools) only to read its own version.
+# On Python 3.12+ envs where setuptools is absent, provide a minimal shim.
+if "pkg_resources" not in sys.modules:
+    try:
+        import pkg_resources  # noqa: F401
+    except ImportError:
+        _mod = types.ModuleType("pkg_resources")
+
+        class _Dist:
+            def __init__(self, name: str) -> None:
+                try:
+                    self.version = importlib.metadata.version(name)
+                except Exception:
+                    self.version = "0.0.0"
+
+        _mod.get_distribution = _Dist  # type: ignore[attr-defined]
+        sys.modules["pkg_resources"] = _mod
+
 import razorpay
 import hmac
 import hashlib
