@@ -25,7 +25,10 @@ from django.core.exceptions import ImproperlyConfigured
 
 logger = logging.getLogger(__name__)
 
-GEMINI_MODEL = os.getenv('GEMINI_MODEL', 'models/gemini-flash-latest')
+# Pinned rather than a -latest alias: the shared aliases are heavily subscribed and
+# return 503 UNAVAILABLE on prompts the size of a full plan, while still answering
+# trivial ones — so the failure looks intermittent and model-independent.
+GEMINI_MODEL = os.getenv('GEMINI_MODEL', 'models/gemini-2.5-flash')
 OMNIROUTE_MODEL = os.getenv('OMNIROUTE_MODEL', 'auto')
 REQUEST_TIMEOUT = float(os.getenv('AI_REQUEST_TIMEOUT', '60'))
 
