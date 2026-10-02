@@ -14,7 +14,9 @@ services:
     runtime: python
     region: oregon
     plan: free
-    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
+    # seed_plans is idempotent (update_or_create keyed on tier + billing_cycle),
+    # so it is safe to re-run on every deploy.
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate && python manage.py seed_plans
     startCommand: gunicorn fitness_ai.wsgi:application
     # /healthz/ is a plain Django view, so it is exempt from the DRF anon
     # throttle that a frequently-polled endpoint would otherwise trip.
