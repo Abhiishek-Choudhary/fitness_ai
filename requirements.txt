@@ -26,9 +26,11 @@ reportlab==4.2.5
 razorpay==1.4.2
 
 # Google AI — unpinned so pip resolves grpcio >= 1.75.1 for Python 3.14
-google-generativeai>=0.8.0
 google-genai>=1.0.0
 google-api-python-client>=2.100.0
+
+# OpenAI-compatible client, used to reach an OmniRoute gateway
+openai==3.23.0
 
 # Production
 gunicorn==23.0.0

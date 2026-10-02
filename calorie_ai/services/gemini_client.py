@@ -1,15 +1,7 @@
-import os
-import json
-from google import genai
-from PIL import Image
+from fitness_ai.ai import extract_json, generate
 
-_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-
-MODEL_NAME = "gemini-2.0-flash"
 
 def analyze_food_image(image_path: str):
-    image = Image.open(image_path)
-
     prompt = """
     You are a food nutrition assistant.
 
@@ -31,9 +23,4 @@ def analyze_food_image(image_path: str):
     - Do not add markdown
     """
 
-    response = _client.models.generate_content(
-        model=MODEL_NAME,
-        contents=[prompt, image],
-    )
-
-    return json.loads(response.text)
+    return extract_json(generate(prompt, image_path=image_path))

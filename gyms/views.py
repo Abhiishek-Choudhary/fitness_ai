@@ -1,7 +1,7 @@
 from django.db.models import Max, Count, Q
 from django.contrib.auth.models import User as DjangoUser
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -126,6 +126,7 @@ class NearbyGymsView(APIView):
     GET /api/gyms/nearby/?lat=<>&lon=<>&radius=<>&gym_type=<>
     Returns gyms sorted by distance ascending, each with distance_km.
     """
+    permission_classes = [AllowAny]
 
     def get(self, request):
         try:
@@ -208,6 +209,7 @@ class GymFollowToggleView(APIView):
 
 class GymMembersListView(generics.ListAPIView):
     """GET /api/gyms/<id>/members/ — list of followers and members."""
+    permission_classes = [IsAuthenticated]
     serializer_class = GymMembershipSerializer
 
     def get_queryset(self):
@@ -408,12 +410,14 @@ class GymCampaignSendView(APIView):
 
 
 class GymCampaignListView(generics.ListAPIView):
-    """GET /api/gyms/<id>/campaigns/ — list a gym's sent campaigns."""
+    """GET /api/gyms/<id>/campaigns/ — list a gym's sent campaigns (owner only)."""
+    permission_classes = [IsAuthenticated]
     serializer_class = GymCampaignListSerializer
 
     def get_queryset(self):
         return GymEmailCampaign.objects.filter(
             gym_id=self.kwargs['pk'],
+            gym__owner=self.request.user,
             sent_at__isnull=False,
         ).select_related('gym')
 

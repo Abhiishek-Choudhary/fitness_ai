@@ -208,12 +208,15 @@ class RazorpayWebhookView(APIView):
         webhook_secret = getattr(settings, 'RAZORPAY_WEBHOOK_SECRET', '')
         signature = request.headers.get('X-Razorpay-Signature', '')
 
-        if webhook_secret and signature:
-            valid = razorpay_client.verify_webhook_signature(
-                request.body, signature, webhook_secret
-            )
-            if not valid:
-                return Response({'error': 'Invalid signature'}, status=status.HTTP_400_BAD_REQUEST)
+        if not webhook_secret:
+            logger.error('Razorpay webhook received but RAZORPAY_WEBHOOK_SECRET is not configured.')
+            return Response({'error': 'Webhook not configured'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        if not signature or not razorpay_client.verify_webhook_signature(
+            request.body, signature, webhook_secret
+        ):
+            logger.warning('Rejected Razorpay webhook with missing or invalid signature.')
+            return Response({'error': 'Invalid signature'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             payload = json.loads(request.body)

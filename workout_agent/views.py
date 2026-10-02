@@ -1,12 +1,14 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 
 from fitness_ai.throttles import AIEndpointUserThrottle, AIEndpointAnonThrottle
 from workout_agent.agents.exercise_enricher import enrich_workout_plan
 
 
 class EnrichedWorkoutAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     throttle_classes = [AIEndpointUserThrottle, AIEndpointAnonThrottle]
 
     def post(self, request):

@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 import dj_database_url
 import os
@@ -22,14 +23,17 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
+def env_bool(name, default=False):
+    return os.getenv(name, str(default)).strip().lower() in ('1', 'true', 'yes')
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-q4(xm9rl@=_#^epswx%$6u4x9jw8^5^=f4@lsx+3p$s7-_iu98'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env_bool('DEBUG', False)
+
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured('DJANGO_SECRET_KEY must be set when DEBUG is off.')
+    SECRET_KEY = 'django-insecure-local-development-only'
 
 ALLOWED_HOSTS = os.getenv(
     "ALLOWED_HOSTS",
@@ -95,6 +99,21 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 
 CORS_ALLOW_CREDENTIALS = True
 
+CSRF_TRUSTED_ORIGINS = [o for o in CORS_ALLOWED_ORIGINS if o.startswith('https://')]
+
+# Render terminates TLS at its proxy, so Django only sees the forwarded header.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+
 ROOT_URLCONF = 'fitness_ai.urls'
 
 TEMPLATES = [
@@ -119,18 +138,14 @@ WSGI_APPLICATION = 'fitness_ai.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+DATABASE_URL = os.getenv('DATABASE_URL', f'sqlite:///{BASE_DIR / "db.sqlite3"}')
 
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv('DATABASE_URL'),
+    'default': dj_database_url.parse(
+        DATABASE_URL,
         conn_max_age=600,
-        ssl_require=False  # set True for production if required
+        # sslmode is a Postgres-only option; sqlite rejects it.
+        ssl_require=DATABASE_URL.startswith('postgres') and env_bool('DATABASE_SSL_REQUIRE', not DEBUG),
     )
 }
 
@@ -190,6 +205,9 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
@@ -230,6 +248,34 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', f'FitnessAI <{os.getenv("EM
 RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID', '')
 RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET', '')
 RAZORPAY_WEBHOOK_SECRET = os.getenv('RAZORPAY_WEBHOOK_SECRET', '')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {name} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': os.getenv('LOG_LEVEL', 'INFO'),
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+}
 
 # Cache — file-based so news results persist across restarts (no Redis needed)
 CACHES = {

@@ -1,9 +1,10 @@
 """Generate AI-powered improvement suggestions using Gemini."""
-import os
 import json
-from google import genai
+import logging
 
-_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY", ""))
+from fitness_ai.ai import generate
+
+logger = logging.getLogger(__name__)
 
 
 def generate_ai_analysis(report_data: dict, period: str, period_start: str, period_end: str) -> str:
@@ -71,13 +72,10 @@ Keep language motivating, specific, and based only on the data provided.
 """.strip()
 
     try:
-        response = _client.models.generate_content(
-            model="gemini-1.5-flash",
-            contents=prompt,
-        )
-        return response.text.strip()
-    except Exception as e:
+        return generate(prompt).strip()
+    except Exception:
+        logger.exception('AI report analysis failed for %s period %s to %s', period, period_start, period_end)
         return (
-            f"AI analysis could not be generated at this time ({str(e)}). "
+            "AI analysis could not be generated at this time. "
             "Please review your data above and consult your fitness plan for guidance."
         )

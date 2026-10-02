@@ -9,7 +9,7 @@ class OwnerMiniSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'name']
+        fields = ['id', 'username', 'name']
 
     def get_name(self, obj):
         return obj.get_full_name() or obj.username

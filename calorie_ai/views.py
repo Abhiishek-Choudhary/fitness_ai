@@ -1,3 +1,5 @@
+import logging
+import os
 import tempfile
 from django.utils import timezone
 from rest_framework.views import APIView
@@ -11,8 +13,11 @@ from .serializers import FoodImageSerializer, FoodLogSerializer, FoodLogCreateFr
 from .services.gemini_client import analyze_food_image
 from .services.calorie_mapper import estimate_calories
 
+logger = logging.getLogger(__name__)
+
 
 class CalorieEstimateView(APIView):
+    permission_classes = [IsAuthenticated]
     throttle_classes = [AIEndpointUserThrottle, AIEndpointAnonThrottle]
 
     def post(self, request):
@@ -36,8 +41,14 @@ class CalorieEstimateView(APIView):
                 "confidence": 0.75,
                 "note": "Calories are estimated using AI",
             })
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception:
+            logger.exception('Calorie estimation failed')
+            return Response(
+                {"error": "Could not analyse that photo. Please try again."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        finally:
+            os.unlink(image_path)
 
 
 class FoodLogCreateView(APIView):

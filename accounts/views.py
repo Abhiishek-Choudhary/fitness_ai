@@ -5,10 +5,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from .serializers import SignupSerializer
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 
 class SignupView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
 
@@ -38,6 +40,8 @@ class CustomLoginView(APIView):
     """
     Custom login view that accepts email and password for authentication
     """
+    permission_classes = [AllowAny]
+
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')

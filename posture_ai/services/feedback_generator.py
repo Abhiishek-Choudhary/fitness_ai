@@ -1,8 +1,8 @@
-import os
-from google import genai
-from google.genai.errors import ClientError
+import logging
 
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+from fitness_ai.ai import generate
+
+logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = """You are a professional fitness coach.
 You explain exercise posture feedback based only on provided data.
@@ -51,10 +51,7 @@ Explain:
 4. One simple cue
 """
     try:
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt
-        )
-        return response.text
-    except (ClientError, Exception):
+        return generate(prompt)
+    except Exception:
+        logger.warning('Gemini posture feedback unavailable, using rule-based advice', exc_info=True)
         return _rule_based_feedback(exercise, score, issues)

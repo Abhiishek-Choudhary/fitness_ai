@@ -1,13 +1,17 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 
 from fitness_ai.throttles import AIEndpointUserThrottle, AIEndpointAnonThrottle
 from .models import PostureSession, PostureImage
+from .services.posture_analyzer import analyze_pushup
+from .services.feedback_generator import generate_feedback
 from .serializers import PostureSessionSerializer
 
 
 class PushUpImageUploadAPI(APIView):
+    permission_classes = [IsAuthenticated]
     throttle_classes = [AIEndpointUserThrottle, AIEndpointAnonThrottle]
 
     def post(self, request):
@@ -32,12 +36,9 @@ class PushUpImageUploadAPI(APIView):
         serializer = PostureSessionSerializer(session)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-from .models import PostureSession
-from .services.posture_analyzer import analyze_pushup
-from .services.feedback_generator import generate_feedback
-
 
 class AnalyzePostureAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     throttle_classes = [AIEndpointUserThrottle, AIEndpointAnonThrottle]
 
     def post(self, request, session_id):

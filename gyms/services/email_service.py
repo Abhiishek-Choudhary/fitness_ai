@@ -2,12 +2,16 @@
 Email service — Single Responsibility: find nearby users and send
 gym email campaigns via Django's mail backend.
 """
-from django.core.mail import send_mail, BadHeaderError
+import logging
+
+from django.core.mail import EmailMessage
 from django.conf import settings
 from django.utils import timezone
 
 from community.models import UserLocation
 from community.services.geo_service import filter_qs_by_radius, haversine
+
+logger = logging.getLogger(__name__)
 
 
 def find_users_in_area(lat: float, lon: float, radius_km: float) -> list:
@@ -52,14 +56,16 @@ def send_campaign(gym, campaign) -> int:
     body = _build_body(gym, campaign)
 
     try:
-        send_mail(
+        # bcc, not recipient_list: campaign members must not see each other's addresses.
+        EmailMessage(
             subject=subject,
-            message=body,
+            body=body,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=recipient_emails,
-            fail_silently=False,
-        )
-    except (BadHeaderError, Exception):
+            to=[settings.DEFAULT_FROM_EMAIL],
+            bcc=recipient_emails,
+        ).send(fail_silently=False)
+    except Exception:
+        logger.exception('Campaign %s for gym %s failed to send', campaign.pk, gym.pk)
         return 0
 
     campaign.sent_at = timezone.now()

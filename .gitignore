@@ -2,4 +2,9 @@ venv/
 __pycache__/
 *.pyc
 .env
+.env.example
 db.sqlite3
+staticfiles/
+cache/
+media/
+progress_images/
