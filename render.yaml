@@ -1,0 +1,59 @@
+# Render Blueprint.
+#
+# This does NOT retrofit onto a service that was created through the dashboard —
+# such a service keeps using its dashboard settings and ignores this file. It
+# applies when you create a Blueprint from the repo, which provisions new
+# resources. Kept here so the deploy configuration is reviewable in git.
+#
+# region must match the database's region, otherwise the internal connection
+# URL will not resolve.
+
+services:
+  - type: web
+    name: fitness-ai
+    runtime: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
+    startCommand: gunicorn fitness_ai.wsgi:application
+    # /healthz/ is a plain Django view, so it is exempt from the DRF anon
+    # throttle that a frequently-polled endpoint would otherwise trip.
+    healthCheckPath: /healthz/
+    envVars:
+      # Generated once by Render and kept thereafter, so a deploy can never fail
+      # on a forgotten secret key.
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+
+      - key: DEBUG
+        value: "False"
+
+      - key: ALLOWED_HOSTS
+        sync: false
+
+      # Prompted for on Blueprint creation, never stored in git.
+      - key: DATABASE_URL
+        sync: false
+      - key: GEMINI_API_KEYS
+        sync: false
+      - key: YOUTUBE_API_KEY
+        sync: false
+      - key: NEWS_API_KEY
+        sync: false
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+
+      # omniroute is skipped unless this is set, and it must be a host Render
+      # can reach — a localhost gateway will not work from here.
+      - key: OMNIROUTE_BASE_URL
+        sync: false

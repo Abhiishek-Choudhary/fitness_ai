@@ -20,7 +20,11 @@ from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
+from .health import healthz
+
 urlpatterns = [
+    path('healthz/', healthz, name='healthz'),
+
     path('admin/', admin.site.urls),
 
     # API docs

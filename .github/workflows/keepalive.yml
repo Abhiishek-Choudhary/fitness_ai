@@ -1,0 +1,28 @@
+name: Keep Render service awake
+
+# Render free instances spin down after 15 minutes without inbound traffic and
+# take about a minute to wake, so the interval has to stay under 15 — hourly
+# would let it sleep between every ping.
+#
+# Budget: a free workspace gets 750 instance hours/month shared across ALL free
+# services. A month is ~730 hours, so pinging around the clock consumes nearly
+# the entire allowance. The window below trims it to roughly 570 hours to leave
+# headroom. Widen `1-19` to `*` only if this is your sole free service.
+#
+# Hours are UTC. 1-19 UTC is about 06:30-01:30 IST.
+
+on:
+  schedule:
+    - cron: '*/10 1-19 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health endpoint
+        # --max-time 90 covers a cold start; a sleeping instance takes ~60s to
+        # answer the request that wakes it.
+        run: |
+          curl -fsS --max-time 90 --retry 2 --retry-delay 30 \
+            https://fitness-ai-qa9m.onrender.com/healthz/
